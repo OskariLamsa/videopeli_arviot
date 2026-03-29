@@ -1,0 +1,24 @@
+<h1>Kirjoita arvio</h1>
+
+<form action="/submitreview" method="post">
+    <p>
+        <label for="game_name">Peli:</label>
+        <select name="game_name" id="game_name">
+            {% for game in games %}
+                <option value="{{ game[0] }}">{{ game[0] }}</option>
+            {% endfor %}
+        </select>
+    </p>
+
+    <p>
+        <label for="score">Arvosana (0-10):</label>
+        <input type="number" name="score" id="score" min="0" max="10" required>
+    </p>
+
+    <p>
+        <label for="review">Arvio:</label><br>
+        <textarea name="review" id="review" rows="8" cols="50" required></textarea>
+    </p>
+
+    <button type="submit">Lähetä arvio</button>
+</form>

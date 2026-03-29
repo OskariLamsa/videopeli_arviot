@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Minicritic</title>
+    </head>
+    <body>
+        <h1>
+            Minicritic: videopelien arviointisivusto
+        </h1>
+        {% if not session.get("username") %}
+            <a href="/loginpage">Login</a>
+            <a href="/register">Rekisteroidy</a>
+        {% else %}
+            Tervetuloa, {{ session.get("username") }} <a href="/logout">Log out</a>
+            <a href="/writereview">Kirjoita arvio</a>
+        {% endif %}
+        <p>
+            Sivustollamme voit arvoida jopa: {{ count }} eri peliä!
+            Pelit:
+        </p>
+        <hr />
+        {% for game in games %}
+        <p>
+            {{ game[0] }}
+        </p>
+        <hr />
+        {% endfor %}
+    </body>
+</html>
