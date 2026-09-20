@@ -16,7 +16,7 @@ Käyttäjät voivat tehdä suoritusmerkinnän vain olemassa oleville peleille. E
 
 ## Sovelluksen kuvaus
 
-Nettisivustomme on yksinkertainen abstraktio Metacritic-sivuston tapaisesta videopelien arviointisivusta. Tiedot peleistä elävät erillisessä staattisessa tietokannassa. Yksi entry tietokannassa sisältää pelin nimen, alustan (konsoli, pc), ja julkaisuvuosi. Kun käyttäjä etsii sivustolta videopelin, he näkevät kaikki sille annetut arviot, ja keksiarvon, joka on väliltä 1-5 tähteä. Tämä keskiarvo lasketaan dynaamisesti jokaisen pelihaun yhteydessä. Kun käyttäjä kirjoittaa arvion pelille, he aloittavat etsimällä pelin nimeltä. Se täytyy löytyä staattisesta tietokannasta. Käyttäjä saa kirjoittaa arvion (max 500 merkkiä) ja antaa 1-5 tähteä. Arvio tallennetaan pääasiallisena tietokohteena.
+Nettisivustomme on yksinkertainen abstraktio Metacritic-sivuston tapaisesta videopelien arviointisivusta. Tiedot peleistä elävät erillisessä staattisessa tietokannassa. Yksi entry tietokannassa sisältää pelin nimen, alustan (konsoli, pc), ja julkaisuvuosi. Kun käyttäjä etsii sivustolta videopelin, he näkevät kaikki sille annetut arviot, ja keskiarvon, joka on väliltä 1-10 tähteä. Tämä keskiarvo lasketaan dynaamisesti jokaisen pelihaun yhteydessä. Kun käyttäjä kirjoittaa arvion pelille, he aloittavat etsimällä pelin nimeltä. Se täytyy löytyä staattisesta tietokannasta. Käyttäjä saa kirjoittaa arvion (max 500 merkkiä) ja antaa 1-10 tähteä. Arvio tallennetaan pääasiallisena tietokohteena.
 Käyttäjät voivat myös etsiä pelejä alustan perusteella. Kilkkaamalla peliä pääsee kyseisen pelin arvointisivulle
 
 ## Ohjeet
