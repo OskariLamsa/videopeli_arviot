@@ -1,24 +1,26 @@
-<h1>Kirjoita arvio</h1>
 
-<form action="/submitreview" method="post">
-    <p>
-        <label for="game_name">Peli:</label>
-        <select name="game_name" id="game_name">
-            {% for game in games %}
-                <option value="{{ game[0] }}">{{ game[0] }}</option>
-            {% endfor %}
-        </select>
-    </p>
+{% block content %}
+  <h1>{% if existing_review %}Muokkaa arviota{% else %}Kirjoita arvio{% endif %}</h1>
 
-    <p>
-        <label for="score">Arvosana (0-10):</label>
-        <input type="number" name="score" id="score" min="0" max="10" required>
-    </p>
+  <form action="{{ url_for('submitreview') }}" method="post">
+    {% if existing_review %}
+      <input type="hidden" name="review_id" value="{{ existing_review.id }}">
+    {% endif %}
 
-    <p>
-        <label for="review">Arvio:</label><br>
-        <textarea name="review" id="review" rows="8" cols="50" required></textarea>
-    </p>
+    <select name="game_name">
+      {% for game in games %}
+        <option value="{{ game.name }}"
+          {% if existing_review and existing_review.game_name == game.name %}selected{% endif %}>
+          {{ game.name }}
+        </option>
+      {% endfor %}
+    </select>
 
-    <button type="submit">Lähetä arvio</button>
-</form>
+    <input type="number" name="score" min="0" max="10"
+      value="{{ existing_review.score if existing_review else '' }}">
+
+    <textarea name="review" maxlength="500">{{ existing_review.review if existing_review else '' }}</textarea>
+
+    <button type="submit">Tallenna</button>
+  </form>
+{% endblock %}

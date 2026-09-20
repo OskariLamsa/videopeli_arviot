@@ -63,6 +63,7 @@ def submitreview():
     if not session.get("username"):
         return "Virhe: kirjaudu sisään ensin"
 
+    review_id = request.form.get("review_id")
     game_name = request.form["game_name"]
     score = request.form["score"]
     review_text = request.form["review"]
@@ -84,11 +85,24 @@ def submitreview():
     if not result:
         return "Virhe: peliä ei löytynyt"
 
-    sql = """
-        INSERT INTO reviews (username, game_name, score, review)
-        VALUES (?, ?, ?, ?)
-    """
-    db.execute("users.db", sql, [session["username"], game_name, score, review_text])
+    if review_id:
+        sql = "SELECT username FROM reviews WHERE id = ?"
+        owner = db.query("users.db", sql, [review_id])
+        if not owner or owner[0]["username"] != session["username"]:
+            return "Virhe: et voi muokata toisen käyttäjän arviota"
+
+        sql = """
+            UPDATE reviews
+            SET game_name = ?, score = ?, review = ?
+            WHERE id = ?
+        """
+        db.execute("users.db", sql, [game_name, score, review_text, review_id])
+    else:
+        sql = """
+            INSERT INTO reviews (username, game_name, score, review)
+            VALUES (?, ?, ?, ?)
+        """
+        db.execute("users.db", sql, [session["username"], game_name, score, review_text])
 
     return redirect(url_for("index"))
 
@@ -100,3 +114,57 @@ def register():
 def page1():
     session["logged_in"] = str(randint(0,10000))
     return "Istunto asetettu"
+
+@app.route("/myreviews")
+def myreviews():
+    if not session.get("username"):
+        return "Virhe: kirjaudu sisään ensin"
+    sql = """
+    SELECT id, game_name, score, review
+    FROM reviews
+    WHERE username = ?
+    ORDER BY id DESC
+    """
+    reviews = db.query("users.db", sql, [session["username"]])
+    return render_template("myreviews.html", reviews=reviews, username=session["username"])
+
+@app.route("/editreview/<int:review_id>")
+def editreview(review_id):
+    if not session.get("username"):
+        return "Virhe: kirjaudu sisään ensin"
+
+    sql = "SELECT id, username, game_name, score, review FROM reviews WHERE rowid = ?"
+    result = db.query("users.db", sql, [review_id])
+
+    if not result:
+        return "Virhe: arviota ei löytynyt"
+
+    existing_review = result[0]
+
+    if existing_review["username"] != session["username"]:
+        return "Virhe: et voi muokata toisen käyttäjän arviota"
+
+    games = db.query("games.db", "SELECT name FROM games ORDER BY name")
+    return render_template("writereview.html", games=games, existing_review=existing_review)
+
+@app.route("/game/<game_name>")
+def game(game_name):
+    sql = "SELECT id FROM games WHERE name = ?"
+    result = db.query("games.db", sql, [game_name])
+
+    if not result:
+        return "Virhe: peliä ei loytynyt"
+
+    sql = """
+    SELECT username, score, review
+    FROM reviews
+    WHERE game_name = ?
+    ORDER BY id DESC    
+    """
+    reviews = db.query("users.db", sql, [game_name])
+    if reviews:
+        average = sum(review["score"] for review in reviews) / len(reviews)
+    else:
+        average = None
+
+    return render_template("game.html", game_name=game_name, reviews=reviews, average=average)

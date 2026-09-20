@@ -1,0 +1,19 @@
+
+{% block content %}
+  <h1>{{ game_name }}</h1>
+
+  {% if average is not none %}
+    <p>Keskiarvo: {{ "%.1f"|format(average) }}/10 ({{ reviews|length }} arviota)</p>
+  {% else %}
+    <p>Ei vielä arvioita.</p>
+  {% endif %}
+
+  <ul>
+    {% for review in reviews %}
+      <li>
+        <strong>{{ review.username }}</strong> - {{ review.score }}/10
+        <p>{{ review.review }}</p>
+      </li>
+    {% endfor %}
+  </ul>
+{% endblock %}

@@ -13,6 +13,7 @@
         {% else %}
             Tervetuloa, {{ session.get("username") }} <a href="/logout">Log out</a>
             <a href="/writereview">Kirjoita arvio</a>
+            <a href="myreviews">Omat arviosi</a>
         {% endif %}
         <p>
             Sivustollamme voit arvoida jopa: {{ count }} eri peliä!
@@ -21,7 +22,7 @@
         <hr />
         {% for game in games %}
         <p>
-            {{ game[0] }}
+            <li><a href="{{ url_for('game', game_name=game.name) }}">{{ game.name }}</a></li>
         </p>
         <hr />
         {% endfor %}
