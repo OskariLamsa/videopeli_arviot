@@ -24,20 +24,19 @@ Käyttäjät voivat myös etsiä pelejä alustan perusteella. Kilkkaamalla peli�
 Kloonaa repositorio, jonka jälkeen aja:
 
 ```
-Poetry install --no-root
-```
-
-```
 python3 -m venv venv
 ```
 
 ```
 source venv/bin/activate
 ```
+```
+pip install flask
+```
 
 ```
 flask run
 ```
-
+Lopuksi, navigoi osoiteeseen http://127.0.0.1:5000
 Voit luoda sivustolle oman käyttäjän, ja kirjoittaa arvioita. Voit myos kirjautua jo olemassa olevan käyttäjän tilille, kuten username: pelaaja, password: pelaaja.
 Klikkaamalla aloitussivussa olevan pelin nimeä, näet kaikki arviot, jotka on annettu kyseiselle pelille.
