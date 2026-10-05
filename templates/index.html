@@ -8,12 +8,13 @@
             Minicritic: videopelien arviointisivusto
         </h1>
         {% if not session.get("username") %}
-            <a href="/loginpage">Login</a>
+            <a href="/loginpage">Kirjaudu</a>
             <a href="/register">Rekisteroidy</a>
         {% else %}
-            Tervetuloa, {{ session.get("username") }} <a href="/logout">Log out</a>
+            Tervetuloa, {{ session.get("username") }} <a href="/logout">Kirjaudu ulos</a>
             <a href="/writereview">Kirjoita arvio</a>
             <a href="myreviews">Omat arviosi</a>
+            <a href="writegame">Lisää peli</a>
         {% endif %}
         <p>
             Sivustollamme voit arvoida jopa: {{ count }} eri peliä!

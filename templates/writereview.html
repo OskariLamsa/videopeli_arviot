@@ -6,20 +6,28 @@
     {% if existing_review %}
       <input type="hidden" name="review_id" value="{{ existing_review.id }}">
     {% endif %}
-
-    <select name="game_name">
-      {% for game in games %}
-        <option value="{{ game.name }}"
-          {% if existing_review and existing_review.game_name == game.name %}selected{% endif %}>
-          {{ game.name }}
-        </option>
-      {% endfor %}
-    </select>
-
-    <input type="number" name="score" min="0" max="10"
+    <p>
+        Pelin nimi:<br />
+      <select name="game_name">
+        {% for game in games %}
+          <option value="{{ game.name }}"
+            {% if existing_review and existing_review.game_name == game.name %}selected{% endif %}>
+            {{ game.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </p>
+    
+    <p>
+      Tähtiarvio: <br />
+      <input type="number" name="score" min="0" max="10"
       value="{{ existing_review.score if existing_review else '' }}">
-
-    <textarea name="review" maxlength="500">{{ existing_review.review if existing_review else '' }}</textarea>
+    </p>
+    
+    <p>
+        Kirjallinen arvio: <br />
+        <textarea name="review" placeholder="Arvio:" maxlength="500">{{ existing_review.review if existing_review else '' }}</textarea>
+    </p>
 
     <button type="submit">Tallenna</button>
   </form>

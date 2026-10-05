@@ -1,0 +1,40 @@
+
+{% block content %} 
+<h1>{% if existing_game %}Muokkaa peliä{% else %}Lisää peli{% endif %}</h1>
+
+{% if error %}
+    <ul class="errors">
+      {% if error is string %}
+        <li>{{ error }}</li>
+      {% else %}
+        {% for e in error %}
+          <li>{{ e }}</li>
+        {% endfor %}
+      {% endif %}
+    </ul>
+{% endif %}
+
+  <form action="{{ url_for('submitgame') }}" method="post">
+    {% if existing_review %}
+      <input type="hidden" name="game_id" value="{{ existing_game.id }}">
+    {% endif %}
+
+    <p>
+        Pelin nimi:<br />
+        <textarea name="game_name" maxlength="60" p>{{ existing_game.name if existing_game else '' }}</textarea>    
+    </p>
+    
+    <p>
+        Konsoli: <br />
+        <textarea name="console" maxlength="25">{{ existing_game.console if existing_game else '' }}</textarea>
+    </p>
+    
+    <p>
+        Julkaisuvuosi: <br />
+        <input type="number" name="year" min="1958" max="10000"
+        value="{{ existing_game.year if existing_game else '' }}">
+    </p>
+    
+    <button type="submit">Tallenna</button>
+  </form>
+{% endblock %}

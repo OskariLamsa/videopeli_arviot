@@ -1,23 +1,32 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Rekisterointi</title>
-    </head>
-    <body>
-        <form action="/create" method="post">
-            <p>
-                Tunnus: <br />
-                <input type="text" name="username" />
-            </p>
-            <p>
-                Salasana: <br />
-                <input type="password" name="password1">
-            </p>
-            <p>
-                Salasana uudelleen: <br />
-                <input type="password" name="password2">
-            </p>
-            <input type="submit" value="Luo tunnus" />
-        </form>
-    </body>
-</html>
+
+{% block content %}
+  <h1>Luo tunnus</h1>
+
+  {% if error %}
+    <ul class="errors">
+      {% if error is string %}
+        <li>{{ error }}</li>
+      {% else %}
+        {% for e in error %}
+          <li>{{ e }}</li>
+        {% endfor %}
+      {% endif %}
+    </ul>
+  {% endif %}
+
+  <form action="{{ url_for('create') }}" method="post">
+    <p>
+        Tunnus: <br />
+        <input type="text" name="username" maxlength="20" value="{{ username|default('') }}">    
+    </p>
+    <p>
+        Salasana: <br />
+        <input type="password" name="password1">    
+    </p>
+    <p>
+        Salasana uudelleen: <br />
+        <input type="password" name="password2">
+    </p>
+    <button type="submit">Luo tunnus</button>
+  </form>
+{% endblock %}
