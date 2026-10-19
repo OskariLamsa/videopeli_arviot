@@ -9,9 +9,7 @@ CREATE TABLE reviews (
     username TEXT,
     game_name TEXT,
     score INT,
-    review TEXT,
-    thumbs_up INT,
-    thumbs_down INT
+    review TEXT
 );
 
 CREATE TABLE thumbs (
