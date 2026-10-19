@@ -1,2 +1,4 @@
 __pycache__/
 venv/
+games.db
+users.db

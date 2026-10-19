@@ -1,7 +1,12 @@
 
 {% block content %}
   <h1>{{ game_name }}</h1>
-
+  {% if not session.get("username") %}
+    <p>Kirjaudu tai rekisteröidy, jotta voit lisätä peukkuja!</p>
+    <a href="/loginpage">Kirjaudu</a>
+    <a href="/register">Rekisteroidy</a>
+  {% endif %}
+  <h2>{{ console }}</h2>
   {% if average is not none %}
     <p>Keskiarvo: {{ "%.1f"|format(average) }}/10 ({{ reviews|length }} arviota)</p>
   {% else %}
@@ -9,11 +14,37 @@
   {% endif %}
 
   <ul>
-    {% for review in reviews %}
-      <li>
-        <strong>{{ review.username }}</strong> - {{ review.score }}/10
-        <p>{{ review.review }}</p>
-      </li>
-    {% endfor %}
+{% for review in reviews %}
+  <li>
+    <a href="{{ url_for('user', username=review.username)}}"><strong>{{ review.username }}</strong></a> - {{ review.score }}/10
+    <p>{{ review.review }}</p>
+
+<form action="{{ url_for('thumb', review_id=review.id) }}" method="post" style="display:inline">
+  <input type="hidden" name="positive" value="1">
+  <button type="submit">
+    {% if review.my_vote == 1 %}
+      <img src="{{ url_for('static', filename='thumbs_up_click.png') }}" alt="Peukku ylös (valittu)" height="16">
+    {% else %}
+      <img src="{{ url_for('static', filename='thumbs_up.png') }}" alt="Peukku ylös" height="16">
+    {% endif %}
+    {{ review.thumbs_up }}
+  </button>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+</form>
+
+<form action="{{ url_for('thumb', review_id=review.id) }}" method="post" style="display:inline">
+  <input type="hidden" name="positive" value="0">
+  <button type="submit">
+    {% if review.my_vote == 0 %}
+      <img src="{{ url_for('static', filename='thumbs_down_click.png') }}" alt="Peukku alas (valittu)" height="16">
+    {% else %}
+      <img src="{{ url_for('static', filename='thumbs_down.png') }}" alt="Peukku alas" height="16">
+    {% endif %}
+    {{ review.thumbs_down }}
+  </button>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+</form>
+  </li>
+{% endfor %}
   </ul>
 {% endblock %}

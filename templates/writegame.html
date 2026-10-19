@@ -21,12 +21,16 @@
 
     <p>
         Pelin nimi:<br />
-        <textarea name="game_name" maxlength="60" p>{{ existing_game.name if existing_game else '' }}</textarea>    
+        <textarea name="game_name" maxlength="100" p>{{ existing_game.name if existing_game else '' }}</textarea>    
     </p>
     
     <p>
-        Konsoli: <br />
-        <textarea name="console" maxlength="25">{{ existing_game.console if existing_game else '' }}</textarea>
+    <select name="console" required>
+      <option value="">Valitse alusta</option>
+      {% for p in consoles %}
+        <option value="{{ p }}" {% if p == console %}selected{% endif %}>{{ p }}</option>
+      {% endfor %}
+    </select>
     </p>
     
     <p>
@@ -36,5 +40,6 @@
     </p>
     
     <button type="submit">Tallenna</button>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
   </form>
 {% endblock %}

@@ -9,5 +9,14 @@ CREATE TABLE reviews (
     username TEXT,
     game_name TEXT,
     score INT,
-    review TEXT
+    review TEXT,
+    thumbs_up INT,
+    thumbs_down INT
 );
+
+CREATE TABLE thumbs (
+    review_id INTEGER NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,
+    username TEXT NOT NULL,
+    positive INTEGER NOT NULL CHECK (positive IN (0, 1)),
+    PRIMARY KEY (review_id, username)
+)

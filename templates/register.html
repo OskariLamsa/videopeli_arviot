@@ -28,5 +28,6 @@
         <input type="password" name="password2">
     </p>
     <button type="submit">Luo tunnus</button>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
   </form>
 {% endblock %}

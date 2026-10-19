@@ -23,3 +23,12 @@ def query(db_name, sql, params=[]):
     result = con.execute(sql, params).fetchall()
     con.close()
     return result
+
+def check_if_game_exists(db_name, game_name):
+    con = sqlite3.connect(db_name)
+    result= con.execute("SELECT * FROM games WHERE name = ?", [game_name]).fetchall()
+    print(f"YAAAY{result}")
+    con.close()
+    if result:
+        return True
+    return False

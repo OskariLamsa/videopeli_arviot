@@ -1,31 +1,45 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Minicritic</title>
-    </head>
-    <body>
-        <h1>
-            Minicritic: videopelien arviointisivusto
+{% block content %}
+  <h1>Minicritic: Pelien arviointisivusto</h1>
         </h1>
         {% if not session.get("username") %}
             <a href="/loginpage">Kirjaudu</a>
             <a href="/register">Rekisteroidy</a>
         {% else %}
-            Tervetuloa, {{ session.get("username") }} <a href="/logout">Kirjaudu ulos</a>
+            Tervetuloa, {{ session.get("username") }}
+            <form action="{{ url_for('logout') }}" method="post" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit">Kirjaudu ulos</button>
+            </form>
             <a href="/writereview">Kirjoita arvio</a>
             <a href="myreviews">Omat arviosi</a>
             <a href="writegame">Lisää peli</a>
         {% endif %}
-        <p>
-            Sivustollamme voit arvoida jopa: {{ count }} eri peliä!
-            Pelit:
-        </p>
-        <hr />
-        {% for game in games %}
-        <p>
-            <li><a href="{{ url_for('game', game_name=game.name) }}">{{ game.name }}</a></li>
-        </p>
-        <hr />
-        {% endfor %}
-    </body>
-</html>
+  <form action="{{ url_for('index') }}" method="get">
+    <input type="text" name="q" value="{{ query }}" placeholder="Hae pelin nimellä" maxlength="100">
+
+    <select name="console" onchange="this.form.submit()">
+      <option value="">Kaikki alustat</option>
+      {% for p in consoles %}
+        <option value="{{ p.console }}" {% if p.console == console %}selected{% endif %}>
+          {{ p.console }}
+        </option>
+      {% endfor %}
+    </select>
+
+    <button type="submit">Hae</button>
+    {% if query or platform %}
+      <a href="{{ url_for('index') }}">Tyhjennä haku</a>
+    {% endif %}
+  </form>
+
+  {% if count == 0 %}
+    <p>Haulla ei löytynyt pelejä.</p>
+  {% else %}
+    <ul>
+        <p>Löytyi ({{ count }}) peliä.</p>
+      {% for game in games %}
+        <li><a href="{{ url_for('game', game_name=game.name) }}">{{ game.name }}</a> ({{ game.console }})</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endblock %}
