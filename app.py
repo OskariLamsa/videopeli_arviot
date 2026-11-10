@@ -8,6 +8,10 @@ import input_validator
 from datetime import datetime
 import secrets
 import review
+import users
+import games
+from config import users_db
+from config import games_db
 
 app = Flask(__name__)
 app.secret_key = config.secret_key
@@ -15,6 +19,7 @@ app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMSITE="Lax",
 )
+
 @app.context_processor
 def inject_csrf_token():
     if "csrf_token" not in session:
@@ -28,11 +33,12 @@ def csrf_protect():
         expected = session.get("csrf_token", "")
         if not expected or not secrets.compare_digest(sent, expected):
             abort(403)
+
 @app.route("/")
 def index():
+    # Etsintätoiminto
     query = request.args.get("q", "").strip()
     console = request.args.get("console", "").strip()
-
     conditions = []
     params = []
 
@@ -45,18 +51,13 @@ def index():
         conditions.append("console = ?")
         params.append(console)
 
-    sql = "SELECT name, console FROM games"
-    if conditions:
-        sql += " WHERE " + " AND ".join(conditions)
-    sql += " ORDER BY name"
-
-    games = db.query("games.db", sql, params)
-    consoles = db.query("games.db", "SELECT DISTINCT console FROM games ORDER BY console")
+    games_list = games.get_games_with_conditions(games_db, conditions, params)
+    consoles = games.get_consoles(games_db)
 
     return render_template(
         "index.html",
-        games=games,
-        count=len(games),
+        games=games_list,
+        count=len(games_list),
         query=query,
         console=console,
         consoles=consoles,
@@ -75,9 +76,10 @@ def create():
 
     password_hash = generate_password_hash(password1)
     try:
-        sql = "INSERT INTO users (username, password_hash) VALUES (?, ?)"
-        db.execute("users.db", sql, [username, password_hash])
+        users.new_user(users_db, [username, password_hash])
+
     except sqlite3.IntegrityError:
+
         return render_template("register.html", error=["Virhe: tunnus on jo käytössä."])
 
     session["username"] = username
@@ -91,14 +93,16 @@ def create():
 def login():
     username = str(request.form.get("username", ""))
     password = request.form.get("password", "")
-    sql = "SELECT password_hash FROM users WHERE username = ?"
     try:
-        password_hash = db.query("users.db", sql, [username])[0][0]
+        password_hash = users.get_password_hash(users_db, [username])[0][0]
+
     except IndexError:
         return "Virhe: väärä tunnus tai salasana"
+    
     if check_password_hash(password_hash,password):
         session["username"] = username
         return redirect(url_for("index"))
+    
     else:
         return "Virhe: väärä tunnus tai salasana"
 
@@ -115,8 +119,8 @@ def loginpage():
 def writereview():
     reguire_login()
 
-    games = db.query("games.db", "SELECT name FROM games ORDER BY name")
-    return render_template("writereview.html", games=games)
+    game_list = games.get_games(games_db)
+    return render_template("writereview.html", games=game_list)
 
 @app.route("/writegame")
 def writegame():
@@ -126,7 +130,6 @@ def writegame():
 @app.route("/submitgame", methods=["POST"])
 def submitgame():
     reguire_login()
-
     game_name = request.form.get("game_name", "")
     console = request.form.get("console", "")
     year = request.form.get("year", "")
@@ -134,7 +137,7 @@ def submitgame():
     if not game_name or not console or not year:
         return "Virhe: kaikki kentät pitää täyttää"
 
-    if db.check_if_game_exists("games.db", game_name):
+    if games.check_if_game_exists(games_db, [game_name]):
         return render_template("writegame.html", error="Virhe: Peli löytyy jo sivustolta!")
         
     game_name_errors = input_validator.validate_game_name(game_name)
@@ -144,11 +147,7 @@ def submitgame():
     if game_name_errors or year_errors or console_errors:
         return render_template("writegame.html", error=game_name_errors + year_errors + console_errors)
     
-    sql = """
-        INSERT INTO games (name, console, year) VALUES (?, ?, ?)
-        """
-    
-    db.execute("games.db", sql, [game_name, console, year])
+    games.new_game(games_db, [game_name, console, year])
     username = session["username"]
     return render_template(
         "redirect.html",
@@ -170,35 +169,21 @@ def submitreview():
     if input_validator.validate_review_score(score) != None:
         return input_validator.validate_review_score(score)
 
-    sql = "SELECT id FROM games WHERE name = ?"
-    result = db.query("games.db", sql, [game_name])
-
+    result = games.get_id_by_name(games_db, [game_name])
     if not result:
         return "Virhe: peliä ei löytynyt"
 
     if review_id:
         # Arvion editointi
-        sql = "SELECT username FROM reviews WHERE id = ?"
-
-        #Laita tähän get_user from users.py!
-
-        owner = db.query("users.db", sql, [review_id])
+        owner = review.get_user_by_reviewid(users_db, [review_id])
         if not owner or owner[0]["username"] != session["username"]:
             return "Virhe: et voi muokata toisen käyttäjän arviota"
 
-        sql = """
-            UPDATE reviews
-            SET game_name = ?, score = ?, review = ?
-            WHERE id = ?
-        """
-        review.updatereview(config.user_db, [game_name, score, review_text, review_id])
+        review.updatereview(users_db, [game_name, score, review_text, review_id])
+
     else:
         # Uusi arvio
-        sql = """
-            INSERT INTO reviews (username, game_name, score, review, thumbs_up, thumbs_down)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """
-        db.execute("users.db", sql, [session["username"], game_name, score, review_text, 0, 0])
+        review.newreview(users_db, [session["username"], game_name, score, review_text, 0, 0])
 
     return redirect(url_for("index"))
 
@@ -209,110 +194,65 @@ def register():
 @app.route("/myreviews")
 def myreviews():
     reguire_login()
-    sql = """
-    SELECT id, game_name, score, review
-    FROM reviews
-    WHERE username = ?
-    ORDER BY id DESC
-    """
-    reviews = db.query("users.db", sql, [session["username"]])
+    reviews = review.get_user_reviews(users_db, [session["username"]])
     average = round(sum(r["score"] for r in reviews) / len(reviews), 2) if reviews else None
-
     return render_template("myreviews.html", reviews=reviews, average=average, username=session["username"])
 
 @app.route("/editreview/<int:review_id>", methods=["POST"])
 def editreview(review_id):
     reguire_login()
-
-    sql = "SELECT id, username, game_name, score, review FROM reviews WHERE rowid = ?"
-    result = db.query("users.db", sql, [review_id])
-
+    result = review.get_review_by_id(users_db, [review_id])
     if not result:
         return "Virhe: arviota ei löytynyt"
 
     existing_review = result[0]
-
     if existing_review["username"] != session["username"]:
         return "Virhe: et voi muokata toisen käyttäjän arviota"
-
-    games = db.query("games.db", "SELECT name FROM games ORDER BY name")
-    return render_template("writereview.html", games=games, existing_review=existing_review)
+    
+    game_list = games.get_games(games_db)
+    return render_template("writereview.html", games=game_list, existing_review=existing_review)
 
 @app.route("/deletereview/<int:review_id>", methods=["POST"])
 def deletereview(review_id):
     reguire_login()
-
-    sql = """
-    SELECT username
-    FROM reviews
-    WHERE id = ?
-    """
-    result = db.query("users.db", sql, [review_id])
+    result = review.get_user_by_reviewid(users_db, [review_id])
     if not result or result[0]["username"] != session["username"]:
         return "Virhe: et voi poistaa tätä arviota"
-    db.execute("users.db", "DELETE FROM reviews WHERE id=?", [review_id])
+    
+    review.delete_review(users_db, [review_id])
     return redirect(url_for("myreviews"))
 
 @app.route("/game/<game_name>")
 def game(game_name):
-    sql = "SELECT id, console FROM games WHERE name = ?"
-    result = db.query("games.db", sql, [game_name])
-
+    result = games.get_id_console_by_name(games_db, [game_name])
     if not result:
         return "Virhe: peliä ei loytynyt"
-
-    sql = """
-        SELECT r.id, r.username, r.score, r.review,
-               COALESCE(SUM(t.positive = 1), 0) AS thumbs_up,
-               COALESCE(SUM(t.positive = 0), 0) AS thumbs_down,
-               (SELECT positive FROM thumbs
-                WHERE review_id = r.id AND username = ?) AS my_vote
-        FROM reviews r
-        LEFT JOIN thumbs t ON t.review_id = r.id
-        WHERE r.game_name = ?
-        GROUP BY r.id
-        ORDER BY r.id DESC
-    """
-    reviews = db.query("users.db", sql, [session.get("username", ""), game_name])
-
+    
+    reviews = review.get_thumbs_by_game_name(users_db, [session.get("username", ""), game_name])
     average = sum(r["score"] for r in reviews) / len(reviews) if reviews else None
     return render_template("game.html", game_name=game_name, console=result[0][1], reviews=reviews, average=average)
 
 @app.route("/thumb/<int:review_id>", methods=["POST"])
 def thumb(review_id):
     reguire_login()
-    print("I got through")
     vote = request.form.get("positive")
     if vote not in ("0", "1"):
         return "Virhe: virheellinen arvo"
 
-    review = db.query("users.db", "SELECT game_name FROM reviews WHERE id = ?", [review_id])
-    if not review:
+    game = review.get_game_name_by_reviewid(users_db, [review_id])
+    if not game:
         return "Virhe: arviota ei löytynyt"
 
-    sql = """
-        INSERT INTO thumbs (review_id, username, positive) VALUES (?, ?, ?)
-        ON CONFLICT(review_id, username) DO UPDATE SET positive = excluded.positive
-    """
-    db.execute("users.db", sql, [review_id, session["username"], int(vote)])
-
-    return redirect(url_for("game", game_name=review[0]["game_name"]))
+    review.new_thumb(users_db, [review_id, session["username"], int(vote)])
+    return redirect(url_for("game", game_name=game[0]["game_name"]))
 
 @app.route("/user/<username>")
 def user(username):
     reguire_login()
-    sql = """
-    SELECT id, game_name, score, review
-    FROM reviews
-    WHERE username = ?
-    ORDER BY id DESC
-    """
-    print(f"I resolved that {[username]}")
-    reviews = db.query("users.db", sql, [username])
+    reviews = review.get_user_reviews(users_db, [username])
     average = round(sum(r["score"] for r in reviews) / len(reviews), 2) if reviews else None
 
     return render_template("user.html", reviews=reviews, username=[username], average=average)
-
 
 def reguire_login():
     if not session.get("username"):

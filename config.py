@@ -1,6 +1,7 @@
 secret_key = "rvf38gkf45u87sug5984sob84qyipaip9ng4p9"
 
-user_db = "users.db"
+users_db = "users.db"
+games_db = "games.db"
 
 CONSOLES = [
     "Nintendo NES",
