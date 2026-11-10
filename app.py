@@ -1,6 +1,5 @@
 from flask import Flask
 from flask import render_template, request, redirect, session, url_for, abort
-from random import randint
 from werkzeug.security import generate_password_hash, check_password_hash
 import db
 import sqlite3
@@ -8,6 +7,7 @@ import config
 import input_validator
 from datetime import datetime
 import secrets
+import review
 
 app = Flask(__name__)
 app.secret_key = config.secret_key
@@ -179,6 +179,9 @@ def submitreview():
     if review_id:
         # Arvion editointi
         sql = "SELECT username FROM reviews WHERE id = ?"
+
+        #Laita tähän get_user from users.py!
+
         owner = db.query("users.db", sql, [review_id])
         if not owner or owner[0]["username"] != session["username"]:
             return "Virhe: et voi muokata toisen käyttäjän arviota"
@@ -188,7 +191,7 @@ def submitreview():
             SET game_name = ?, score = ?, review = ?
             WHERE id = ?
         """
-        db.execute("users.db", sql, [game_name, score, review_text, review_id])
+        review.updatereview(config.user_db, [game_name, score, review_text, review_id])
     else:
         # Uusi arvio
         sql = """

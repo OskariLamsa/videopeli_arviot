@@ -1,4 +1,5 @@
 from datetime import datetime
+
 def validate_password(password, password2=None):
     errors = []
 
