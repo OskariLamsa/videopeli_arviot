@@ -1,6 +1,9 @@
 
 {% block content %}
-  <h1>{{ username }} - omat arviot</h1>
+  <h1>
+  <a href="/">Minicritic: Pelien arviointisivusto</a>
+  </h1>
+  <h2>{{ username }} - omat arviot</h2>
 
   {% if reviews|length == 0 %}
     <p>Et ole vielä kirjoittanut yhtään arviota.</p>

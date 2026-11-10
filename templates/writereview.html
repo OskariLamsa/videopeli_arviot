@@ -1,7 +1,11 @@
 
 {% block content %}
-  <h1>{% if existing_review %}Muokkaa arviota{% else %}Kirjoita arvio{% endif %}</h1>
-
+  <h1>
+  <a href="/">Minicritic: Pelien arviointisivusto</a>
+  </h1>
+  <h2>{% if existing_review %}Muokkaa arviota{% else %}Kirjoita arvio{% endif %}</h2>
+  <h3>{% if redirect %}Voit arvioida jokaista peliä vain kerran!{% endif %}</h3>
+  <h3>{% if redirect %}Voit muokata olemassa olevaa arviotasi tässä.{% endif %}</h3>
   <form action="{{ url_for('submitreview') }}" method="post">
     {% if existing_review %}
       <input type="hidden" name="review_id" value="{{ existing_review.id }}">

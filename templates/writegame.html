@@ -1,6 +1,10 @@
 
 {% block content %} 
-<h1>{% if existing_game %}Muokkaa peliä{% else %}Lisää peli{% endif %}</h1>
+  <h1>
+  <a href="/">Minicritic: Pelien arviointisivusto</a>
+  </h1>
+
+<h2>{% if existing_game %}Muokkaa peliä{% else %}Lisää peli{% endif %}</h2>
 
 {% if error %}
     <ul class="errors">

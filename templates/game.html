@@ -1,6 +1,9 @@
 
 {% block content %}
-  <h1>{{ game_name }}</h1>
+  <h1>
+  <a href="/">Minicritic: Pelien arviointisivusto</a>
+  </h1>
+  <h2>{{ game_name }}</h2>
   {% if not session.get("username") %}
     <p>Kirjaudu tai rekisteröidy, jotta voit lisätä peukkuja!</p>
     <a href="/loginpage">Kirjaudu</a>

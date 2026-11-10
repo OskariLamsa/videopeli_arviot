@@ -172,6 +172,11 @@ def submitreview():
     result = games.get_id_by_name(games_db, [game_name])
     if not result:
         return "Virhe: peliä ei löytynyt"
+    existing_review = review.check_if_game_in_reviews(users_db, [session.get("username"), game_name])
+    if existing_review:
+        print(existing_review[0][0])
+        redirect = True
+        return editreview(existing_review[0][0], redirect)
 
     if review_id:
         # Arvion editointi
@@ -199,7 +204,8 @@ def myreviews():
     return render_template("myreviews.html", reviews=reviews, average=average, username=session["username"])
 
 @app.route("/editreview/<int:review_id>", methods=["POST"])
-def editreview(review_id):
+def editreview(review_id, redirect = False):
+    print(redirect)
     reguire_login()
     result = review.get_review_by_id(users_db, [review_id])
     if not result:
@@ -207,10 +213,14 @@ def editreview(review_id):
 
     existing_review = result[0]
     if existing_review["username"] != session["username"]:
+        # CSRF?
         return "Virhe: et voi muokata toisen käyttäjän arviota"
     
     game_list = games.get_games(games_db)
-    return render_template("writereview.html", games=game_list, existing_review=existing_review)
+    if redirect:
+        return render_template("writereview.html", games=game_list, existing_review=existing_review, redirect = redirect)
+    else:
+        return render_template("writereview.html", games=game_list, existing_review=existing_review)
 
 @app.route("/deletereview/<int:review_id>", methods=["POST"])
 def deletereview(review_id):

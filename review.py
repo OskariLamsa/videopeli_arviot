@@ -73,6 +73,14 @@ def get_game_name_by_reviewid(db_name, param):
     """
     return db.query(db_name, sql, param)
 
+def check_if_game_in_reviews(db_name, param):
+    sql = """
+    SELECT id
+    FROM reviews
+    WHERE username = ?
+    AND game_name = ?
+    """
+    return db.query(db_name, sql, param)
 def delete_review(db_name, param):
     sql = """
     DELETE
