@@ -43,4 +43,17 @@
       {% endfor %}
     </ul>
   {% endif %}
+  {% if total_pages > 1 %}
+  <nav>
+    {% if page > 1 %}
+      <a href="{{ url_for('index', q=query or None, platform=platform or None, page=page - 1) }}">&laquo; Edellinen</a>
+    {% endif %}
+
+    Sivu {{ page }} / {{ total_pages }}
+
+    {% if page < total_pages %}
+      <a href="{{ url_for('index', q=query or None, platform=platform or None, page=page + 1) }}">Seuraava &raquo;</a>
+    {% endif %}
+  </nav>
+{% endif %}
 {% endblock %}

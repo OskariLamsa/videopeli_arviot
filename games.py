@@ -16,11 +16,15 @@ def get_consoles(db_name):
     """
     return db.query(db_name, sql)
 
-def get_games_with_conditions(db_name, conditions, params):
+def get_games_with_conditions(db_name, conditions, limit_flag, params):
     sql = "SELECT name, console FROM games"
     if conditions:
         sql += " WHERE " + " AND ".join(conditions)
-        sql += " ORDER BY name"
+    sql += " ORDER BY name"
+    if limit_flag:
+        sql += ",id LIMIT ? OFFSET ?"
+    else:
+        params = params[0:-2]
 
     return db.query(db_name, sql, params)
 

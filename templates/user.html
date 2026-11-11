@@ -3,7 +3,7 @@
   <h1>
   <a href="/">Minicritic: Pelien arviointisivusto</a>
   </h1>
-  <h2>Käyttäjän {{ username[0] }} - arviot</h2>
+  <h2>Käyttäjän {{ username[0] }} - arviot: {{ total }} kappaletta</h2>
 
   {% if reviews|length == 0 %}
     <p>Tämä käyttäjä ei ole vielä kirjoittanut arvioita.</p>
@@ -17,5 +17,16 @@
         </li>
       {% endfor %}
     </ul>
+    <nav>
+    {% if page > 1 %}
+      <a href="{{ url_for('user', username=username, page=page - 1) }}">&laquo; Edellinen</a>
+    {% endif %}
+
+    Sivu {{ page }} / {{ total_pages }}
+
+    {% if page < total_pages %}
+      <a href="{{ url_for('user', username=username, page=page + 1) }}">Seuraava &raquo;</a>
+    {% endif %}
+  </nav>
   {% endif %}
 {% endblock %}

@@ -25,13 +25,17 @@ def new_thumb(db_name, params):
     """
     db.execute(db_name, sql, params)
 
-def get_user_reviews(db_name, param):
+def get_user_reviews(db_name, limit_flag, param):
     sql = """
     SELECT id, game_name, score, review
     FROM reviews
     WHERE username = ?
     ORDER BY id DESC
     """
+    if limit_flag:
+        sql += "LIMIT ? OFFSET ?"
+    else:
+        param = param[0:-1]
     return db.query(db_name, sql, param)
 
 def get_user_by_reviewid(db_name, param):
@@ -62,6 +66,7 @@ def get_thumbs_by_game_name(db_name, params):
         WHERE r.game_name = ?
         GROUP BY r.id
         ORDER BY r.id DESC
+        LIMIT ? OFFSET ?
     """
     return db.query(db_name, sql, params)
 
@@ -88,3 +93,11 @@ def delete_review(db_name, param):
     WHERE id = ?
     """
     db.execute(db_name, sql, param)
+
+def get_review_count_by_game(db_name, param):
+    sql = """
+    SELECT COUNT (*), AVG(score)
+    FROM reviews
+    WHERE game_name = ?
+    """
+    return db.query(db_name, sql, param)
