@@ -1,5 +1,5 @@
 from flask import Flask
-from flask import render_template, request, redirect, session, url_for, abort
+from flask import render_template, request, redirect, session, url_for, abort, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 import db
 import sqlite3
@@ -82,14 +82,18 @@ def create():
     username_errors = input_validator.validate_username(username)
     password_errors = input_validator.validate_password(password1, password2)
 
+    existing_info = []
+
     if username_errors or password_errors:
-        return render_template("register.html", error=username_errors + password_errors)
+        return render_template("register.html", username=username, error=username_errors + password_errors)
 
     password_hash = generate_password_hash(password1)
     try:
         users.new_user(users_db, [username, password_hash])
     except sqlite3.IntegrityError:
-        return render_template("register.html", error=["Virhe: tunnus on jo käytössä."])
+        existing_info.append(password1)
+        existing_info.append(password2)
+        return render_template("register.html", password1=password1, password2=password2, username=username, error=["Virhe: tunnus on jo käytössä."])
 
     session["username"] = username
     return render_template(
@@ -105,14 +109,14 @@ def login():
     try:
         password_hash = users.get_password_hash(users_db, [username])[0][0]
     except IndexError:
-        return "Virhe: väärä tunnus tai salasana"
+        return render_template("login.html", username=username, error="Virhe: väärä tunnus tai salasana")
     
     if check_password_hash(password_hash,password):
         session["username"] = username
         return redirect(url_for("index"))
     
     else:
-        return "Virhe: väärä tunnus tai salasana"
+        return render_template("login.html", username=username, error="Virhe: väärä tunnus tai salasana")
 
 @app.route("/logout", methods=["POST"])
 def logout():
@@ -143,17 +147,17 @@ def submitgame():
     year = request.form.get("year", "")
 
     if not game_name or not console or not year:
-        return "Virhe: kaikki kentät pitää täyttää"
+        return render_template("writegame.html", game_name=game_name, consoles=config.CONSOLES, cons=console, year=year, error="Virhe: Kaikki kentät on täytettävä.")
 
     if games.check_if_game_exists(games_db, [game_name]):
-        return render_template("writegame.html", error="Virhe: Peli löytyy jo sivustolta!")
+        return render_template("writegame.html", game_name=game_name, consoles=config.CONSOLES, cons=console, year=year, error="Virhe: Peli löytyy jo sivustolta!")
         
     game_name_errors = input_validator.validate_game_name(game_name)
     year_errors = input_validator.validate_year(year)
     console_errors = input_validator.validate_console(console)
     
     if game_name_errors or year_errors or console_errors:
-        return render_template("writegame.html", error=game_name_errors + year_errors + console_errors)
+        return render_template("writegame.html", game_name=game_name, console=config.CONSOLES, cons=console, year=year, error=game_name_errors + year_errors + console_errors)
     
     games.new_game(games_db, [game_name, console, year])
     username = session["username"]
@@ -166,38 +170,40 @@ def submitgame():
 @app.route("/submitreview", methods=["POST"])
 def submitreview():
     reguire_login()
-
     review_id = request.form.get("review_id", "")
     game_name = request.form.get("game_name", "")
     score = request.form.get("score", "")
     review_text = request.form.get("review", "")
+
+    all_games = games.get_games(games_db)
+    filled_dict = {"game_name": game_name, "score": score, "review": review_text}
     if not game_name or not score or not review_text:
-        return "Virhe: kaikki kentät pitää täyttää"
+        return render_template("writereview.html", existing_review=filled_dict, games=all_games, error="Virhe: Kaikki kentät pitää täyttää.")
 
     if input_validator.validate_review_score(score) != None:
         return input_validator.validate_review_score(score)
 
     result = games.get_id_by_name(games_db, [game_name])
     if not result:
-        return "Virhe: peliä ei löytynyt"
-    existing_review = review.check_if_game_in_reviews(users_db, [session.get("username"), game_name])
-    if existing_review:
-        print(existing_review[0][0])
-        from_redirect = True
-        return editreview(existing_review[0][0], from_redirect)
-
+        # Teknisesti otten tämän ei pitäisi tapahtua ikinä, sillä käyttäjä pystyi valitsemaan
+        # tämän pelin, mutta varmuuden vuoksi:
+        return render_template("writereview.html", existing_review=filled_dict, games=all_games, error="Virhe: peliä ei löytynyt.")
     if review_id:
         # Arvion editointi
         owner = review.get_user_by_reviewid(users_db, [review_id])
         if not owner or owner[0]["username"] != session["username"]:
-            return "Virhe: et voi muokata toisen käyttäjän arviota"
+            # Tämän pitäisi tapahtua ainoastaan, jos käyttäjä yrittää tehdä jotain laitonta.
+                abort(403)
 
         review.updatereview(users_db, [game_name, score, review_text, review_id])
 
     else:
+        existing_review = review.check_if_game_in_reviews(users_db, [session.get("username"), game_name])
+        if existing_review:
+            review.updatereview(users_db, [game_name, score, review_text, existing_review[0]["id"]])
         # Uusi arvio
-        review.newreview(users_db, [session["username"], game_name, score, review_text, 0, 0])
-
+        else:
+            review.newreview(users_db, [session["username"], game_name, score, review_text, 0, 0])
     return redirect(url_for("index"))
 
 @app.route("/register")
@@ -221,14 +227,17 @@ def editreview(review_id, from_redirect = False):
     reguire_login()
     result = review.get_review_by_id(users_db, [review_id])
     if not result:
-        return "Virhe: arviota ei löytynyt"
+        # Tämä tapahtuu ainoastaan jos käyttäjä yrittää kirjoittaa satunnaisia id-numeroita osoite kenttään,
+        # ja osuu id-numeroon jota ei ole.
+        abort(404)
+
 
     existing_review = result[0]
     if existing_review["username"] != session["username"]:
-        # CSRF?
+        # Muun käyttäjän omistama
         abort(403)
     
-    game_list = games.get_games(games_db)
+    game_list = games.get_game_by_name(games_db, [existing_review["game_name"]])
     if from_redirect:
         return render_template("writereview.html", games=game_list, existing_review=existing_review, redirect = from_redirect)
     else:
@@ -250,7 +259,7 @@ def deletereview(review_id):
 def game(game_name):
     result = games.get_id_console_by_name(games_db, [game_name])
     if not result:
-        return "Virhe: peliä ei loytynyt"
+        abort(404)
 
     page = get_page()
     page = max(page, 1)
@@ -277,11 +286,15 @@ def thumb(review_id):
     reguire_login()
     vote = request.form.get("positive")
     if vote not in ("0", "1"):
-        return "Virhe: virheellinen arvo"
+        # Ei pitäisi olla mahdollinen, ellei käyttäjä leiki cURL:la
+        flash("Virhe: Odottamaton virhe. Ota yhtettä ohjelmoijaan.")
+        return redirect(request.referrer or url_for("index"))
 
     game = review.get_game_name_by_reviewid(users_db, [review_id])
     if not game:
-        return "Virhe: arviota ei löytynyt"
+        # Esim jos peli on poistettu ennen kuin peukku annetaan
+        flash("Virhe: Arviota ei löytynyt.")
+        return redirect(request.referrer or url_for("index"))
 
     review.new_thumb(users_db, [review_id, session["username"], int(vote)])
     try:
@@ -298,13 +311,13 @@ def user(username):
     if first:
         average = round(sum(r["score"] for r in first) / len(first), 2) if first else None
     else:
-        return "Virhe: tätä käyttäjää ei löytynyt"
+        flash("Virhe: Tätä käyttäjää ei löytynyt")
+        return redirect(request.referrer or url_for("index"))
     total = len(first)
     total_pages = max((total + REVIEWS_PER_PAGE - 1) // REVIEWS_PER_PAGE, 1)
     page = get_page()
     page = min(page, total_pages)
     reviews = review.get_user_reviews(users_db, True, [username, REVIEWS_PER_PAGE, (page - 1)* REVIEWS_PER_PAGE])
-    print("PAGE IS", page)
     return render_template("user.html", reviews=reviews, page=page, username=username, total=total, total_pages=total_pages, average=average)
 
 def get_page():

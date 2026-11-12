@@ -1,6 +1,11 @@
 {% block content %}
   <h1>
   <a href="/">Minicritic: Pelien arviointisivusto</a>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
   </h1>
         {% if not session.get("username") %}
             <a href="/loginpage">Kirjaudu</a>

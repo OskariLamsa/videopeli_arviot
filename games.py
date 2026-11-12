@@ -2,11 +2,19 @@ import db
 
 def get_games(db_name):
     sql = """
-    SELECT name
+    SELECT DISTINCT name
     FROM games
     ORDER BY name
     """
     return db.query(db_name, sql)
+
+def get_game_by_name(db_name, param):
+    sql = """
+    SELECT name
+    FROM games
+    WHERE name = ?
+    """
+    return db.query(db_name, sql, param)
 
 def get_consoles(db_name):
     sql = """

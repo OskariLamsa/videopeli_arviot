@@ -25,14 +25,14 @@
 
     <p>
         Pelin nimi:<br />
-        <textarea name="game_name" maxlength="100" p>{{ existing_game.name if existing_game else '' }}</textarea>    
+        <textarea name="game_name" maxlength="100" p>{{ game_name if game_name else '' }}</textarea>    
     </p>
     
     <p>
     <select name="console" required>
       <option value="">Valitse alusta</option>
       {% for p in consoles %}
-        <option value="{{ p }}" {% if p == console %}selected{% endif %}>{{ p }}</option>
+        <option value="{{ p }}" {% if p == cons %}selected{% endif %}>{{ p }}</option>
       {% endfor %}
     </select>
     </p>
@@ -40,7 +40,7 @@
     <p>
         Julkaisuvuosi: <br />
         <input type="number" name="year" min="1958" max="10000"
-        value="{{ existing_game.year if existing_game else '' }}">
+        value="{{ year if year else '' }}">
     </p>
     
     <button type="submit">Tallenna</button>

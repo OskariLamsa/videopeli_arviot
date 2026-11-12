@@ -24,11 +24,11 @@
     </p>
     <p>
         Salasana: <br />
-        <input type="password" name="password1">    
+        <input type="password" name="password1" value="{{ password1 if password1 else '' }}">    
     </p>
     <p>
         Salasana uudelleen: <br />
-        <input type="password" name="password2">
+        <input type="password" name="password2" value="{{ password2 if password2 else '' }}">
     </p>
     <button type="submit">Luo tunnus</button>
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">

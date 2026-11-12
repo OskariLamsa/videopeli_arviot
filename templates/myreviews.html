@@ -4,7 +4,9 @@
   <a href="/">Minicritic: Pelien arviointisivusto</a>
   </h1>
   <h2>{{ username }} - omat arviot: {{ total }} kappaletta</h2>
-
+  {% if error %}
+    <p>{{ error }}</p>
+  {% endif %}
   {% if reviews|length == 0 %}
     <p>Et ole vielä kirjoittanut yhtään arviota.</p>
   {% else %}
@@ -14,7 +16,7 @@
         <li>
           <strong>{{ review.game_name }}</strong> - {{ review.score }}/10
           <p>{{ review.review }}</p>
-          <form action=" {{url_for('editreview', review_id=review.id) }}" method="post" style="display:inline">
+          <form action=" {{url_for('editreview', review_id=review.id, from_redirect=False) }}" method="post" style="display:inline">
             <button type="submit">Muokkaa arviota</button>
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           </form>

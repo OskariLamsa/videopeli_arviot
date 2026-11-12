@@ -9,6 +9,11 @@
     <a href="/loginpage">Kirjaudu</a>
     <a href="/register">Rekisteroidy</a>
   {% endif %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% for category, message in messages %}
+    <div class="alert alert-{{ category }}">{{ message }}</div>
+  {% endfor %}
+{% endwith %}
   <h2>{{ console }}</h2>
   {% if average is not none %}
     <p>Keskiarvo: {{ "%.1f"|format(average) }}/10 ({{ total }} arviota)</p>
