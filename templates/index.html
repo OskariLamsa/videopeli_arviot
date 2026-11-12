@@ -38,6 +38,11 @@
     </form>
   </li>
   <li>
+    <form action="{{ url_for('mygames') }}" method="get">
+      <button type="submit">Poista peli</button>
+    </form>
+  </li>
+  <li>
     <form action="{{ url_for('logout') }}" method="post">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <button type="submit">Kirjaudu ulos</button>

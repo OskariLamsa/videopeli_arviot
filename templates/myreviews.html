@@ -23,7 +23,8 @@
             <button type="submit">Muokkaa arviota</button>
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           </form>
-          <form action=" {{url_for('deletereview', review_id=review.id) }}" method="post" style="display:inline">
+          <form action=" {{url_for('deletereview', review_id=review.id) }}" method="post" style="display:inline"
+                onsubmit="return confirm('Poistetaanko peli?');">
             <button type="submit">Poista arvio</button>
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           </form>
