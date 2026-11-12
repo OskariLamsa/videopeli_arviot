@@ -1,8 +1,9 @@
 
 {% block content %}
-  <h1>
-  <a href="/">Minicritic: Pelien arviointisivusto</a>
-  </h1>
+<link rel="stylesheet" href="/static/main.css">
+  <div class="header">
+  <h1><a href="{{ url_for('index') }}">Minicritic: Pelien arviointisivusto</a></h1>
+  </div>
   <h2>{{ game_name }}</h2>
   {% if not session.get("username") %}
     <p>Kirjaudu tai rekisteröidy, jotta voit lisätä peukkuja!</p>
@@ -20,17 +21,21 @@
   {% else %}
     <p>Ei vielä arvioita.</p>
   {% endif %}
-
+<div class="content">
   <ul>
 {% for review in reviews %}
+  <div class="thread">
   <li>
-    id="review-{{ review.id }}
     <a href="{{ url_for('user', username=review.username)}}"><strong>{{ review.username }}</strong></a> - {{ review.score }}/10
     <p>{{ review.review }}</p>
 
 <form action="{{ url_for('thumb', review_id=review.id) }}" method="post" style="display:inline">
   <input type="hidden" name="positive" value="1">
+  {% if not session.get("username") %}
+    <button type="submit" disabled>
+  {% else %}
   <button type="submit">
+  {% endif %}
     {% if review.my_vote == 1 %}
       <img src="{{ url_for('static', filename='thumbs_up_click.png') }}" alt="Peukku ylös (valittu)" height="16">
     {% else %}
@@ -43,7 +48,11 @@
 
 <form action="{{ url_for('thumb', review_id=review.id) }}" method="post" style="display:inline">
   <input type="hidden" name="positive" value="0">
+  {% if not session.get("username") %}
+  <button type="submit" disabled>
+  {% else %}
   <button type="submit">
+  {% endif %}  
     {% if review.my_vote == 0 %}
       <img src="{{ url_for('static', filename='thumbs_down_click.png') }}" alt="Peukku alas (valittu)" height="16">
     {% else %}
@@ -54,7 +63,9 @@
   <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 </form>
   </li>
+  </div>
 {% endfor %}
+</div>
 {% if total_pages > 1 %}
   <nav>
     {% if page > 1 %}

@@ -1,8 +1,9 @@
 
 {% block content %} 
-  <h1>
-  <a href="/">Minicritic: Pelien arviointisivusto</a>
-  </h1>
+<link rel="stylesheet" href="/static/main.css">
+  <div class="header">
+  <h1><a href="{{ url_for('index') }}">Minicritic: Pelien arviointisivusto</a></h1>
+  </div>
 
 <h2>{% if existing_game %}Muokkaa peliä{% else %}Lisää peli{% endif %}</h2>
 
@@ -17,7 +18,7 @@
       {% endif %}
     </ul>
 {% endif %}
-
+  <div class="content">
   <form action="{{ url_for('submitgame') }}" method="post">
     {% if existing_review %}
       <input type="hidden" name="game_id" value="{{ existing_game.id }}">
@@ -44,6 +45,7 @@
     </p>
     
     <button type="submit">Tallenna</button>
+    </div>
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
   </form>
 {% endblock %}

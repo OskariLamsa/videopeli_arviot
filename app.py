@@ -1,11 +1,11 @@
 from flask import Flask
 from flask import render_template, request, redirect, session, url_for, abort, flash
 from werkzeug.security import generate_password_hash, check_password_hash
-import db
 import sqlite3
 import config
 import input_validator
 from datetime import datetime
+import db
 import secrets
 import review
 import users
@@ -42,6 +42,7 @@ def index():
     # Etsintätoiminto
     query = request.args.get("q", "").strip()
     console = request.args.get("console", "").strip()
+    year = request.args.get("v", "").strip()
     page = get_page()
     page = max(page, 1)
 
@@ -56,6 +57,10 @@ def index():
     if console:
         conditions.append("console = ?")
         params.append(console)
+
+    if year:
+        conditions.append("year = ?")
+        params.append(year)
     params.append(PAGE_SIZE)
     params.append((page -1) * PAGE_SIZE)
     total = len(games.get_games_with_conditions(games_db, conditions, False, params))
@@ -71,6 +76,7 @@ def index():
         console=console,
         consoles=consoles,
         page=page,
+        year=year,
         total_pages=total_pages
     )
 @app.route("/create", methods=["POST"])
@@ -129,22 +135,23 @@ def loginpage():
 
 @app.route("/writereview")
 def writereview():
-    reguire_login()
+    require_login()
 
     game_list = games.get_games(games_db)
     return render_template("writereview.html", games=game_list)
 
 @app.route("/writegame")
 def writegame():
-    reguire_login()
+    require_login()
     return render_template("writegame.html", consoles=config.CONSOLES)
 
 @app.route("/submitgame", methods=["POST"])
 def submitgame():
-    reguire_login()
+    require_login()
     game_name = request.form.get("game_name", "")
     console = request.form.get("console", "")
     year = request.form.get("year", "")
+    username = session["username"]
 
     if not game_name or not console or not year:
         return render_template("writegame.html", game_name=game_name, consoles=config.CONSOLES, cons=console, year=year, error="Virhe: Kaikki kentät on täytettävä.")
@@ -159,8 +166,7 @@ def submitgame():
     if game_name_errors or year_errors or console_errors:
         return render_template("writegame.html", game_name=game_name, console=config.CONSOLES, cons=console, year=year, error=game_name_errors + year_errors + console_errors)
     
-    games.new_game(games_db, [game_name, console, year])
-    username = session["username"]
+    games.new_game(games_db, [game_name, console, year, username])
     return render_template(
         "redirect.html",
         title="Peli lisätty!",
@@ -169,7 +175,7 @@ def submitgame():
     
 @app.route("/submitreview", methods=["POST"])
 def submitreview():
-    reguire_login()
+    require_login()
     review_id = request.form.get("review_id", "")
     game_name = request.form.get("game_name", "")
     score = request.form.get("score", "")
@@ -181,7 +187,7 @@ def submitreview():
         return render_template("writereview.html", existing_review=filled_dict, games=all_games, error="Virhe: Kaikki kentät pitää täyttää.")
 
     if input_validator.validate_review_score(score) != None:
-        return input_validator.validate_review_score(score)
+        return render_template("writereview.html", existing_review=filled_dict, games=all_games, error=f"{input_validator.validate_review_score(score)}")
 
     result = games.get_id_by_name(games_db, [game_name])
     if not result:
@@ -203,8 +209,13 @@ def submitreview():
             review.updatereview(users_db, [game_name, score, review_text, existing_review[0]["id"]])
         # Uusi arvio
         else:
-            review.newreview(users_db, [session["username"], game_name, score, review_text, 0, 0])
-    return redirect(url_for("index"))
+            review.newreview(users_db, [session["username"], game_name, score, review_text])
+    username = session["username"]
+    return render_template(
+        "redirect.html",
+        title="Arvio tallennettu!",
+        message=f"Arvionne on nyt tallennettu, {username}. Sinut ohjataan etusivulle muutaman sekunnin kuluttua."
+    )
 
 @app.route("/register")
 def register():
@@ -212,7 +223,7 @@ def register():
 
 @app.route("/myreviews")
 def myreviews():
-    reguire_login()
+    require_login()
     page = get_page()
     first = review.get_user_reviews(users_db, False, [session["username"], REVIEWS_PER_PAGE])
     total = len(first)
@@ -224,13 +235,12 @@ def myreviews():
 
 @app.route("/editreview/<int:review_id>", methods=["GET", "POST"])
 def editreview(review_id, from_redirect = False):
-    reguire_login()
+    require_login()
     result = review.get_review_by_id(users_db, [review_id])
     if not result:
         # Tämä tapahtuu ainoastaan jos käyttäjä yrittää kirjoittaa satunnaisia id-numeroita osoite kenttään,
         # ja osuu id-numeroon jota ei ole.
         abort(404)
-
 
     existing_review = result[0]
     if existing_review["username"] != session["username"]:
@@ -245,7 +255,7 @@ def editreview(review_id, from_redirect = False):
 
 @app.route("/deletereview/<int:review_id>", methods=["GET", "POST"])
 def deletereview(review_id):
-    reguire_login()
+    require_login()
     result = review.get_user_by_reviewid(users_db, [review_id])
     if not result:
         abort(404)
@@ -283,7 +293,7 @@ def game(game_name):
 
 @app.route("/thumb/<int:review_id>", methods=["GET","POST"])
 def thumb(review_id):
-    reguire_login()
+    require_login()
     vote = request.form.get("positive")
     if vote not in ("0", "1"):
         # Ei pitäisi olla mahdollinen, ellei käyttäjä leiki cURL:la
@@ -296,7 +306,17 @@ def thumb(review_id):
         flash("Virhe: Arviota ei löytynyt.")
         return redirect(request.referrer or url_for("index"))
 
-    review.new_thumb(users_db, [review_id, session["username"], int(vote)])
+    username = session["username"]
+    new_vote = int(vote)
+    existing = review.get_thumb(users_db, [review_id, username])
+
+    if existing and existing[0]["positive"] == new_vote:
+        # Sama nappi painettu uudelleen: poistetaan peukku
+        review.remove_thumb(users_db, [review_id, username])
+    else:
+        # Ei aiempaa ääntä tai vastakkainen ääni: lisätään tai päivitetään
+        review.new_thumb(users_db, [review_id, username, new_vote])
+
     try:
         page = max(int(request.form.get("page", "1")), 1)
     except ValueError:
@@ -305,7 +325,6 @@ def thumb(review_id):
 
 @app.route("/user/<username>")
 def user(username):
-    reguire_login()
     first = review.get_user_reviews(users_db, False, [username, REVIEWS_PER_PAGE])
     average = 0
     if first:
@@ -320,12 +339,39 @@ def user(username):
     reviews = review.get_user_reviews(users_db, True, [username, REVIEWS_PER_PAGE, (page - 1)* REVIEWS_PER_PAGE])
     return render_template("user.html", reviews=reviews, page=page, username=username, total=total, total_pages=total_pages, average=average)
 
+@app.route("/mygames")
+def mygames():
+    require_login()
+    username = session["username"]
+    owned = games.get_games_by_user(games_db, [username])
+    deletable = []
+    if owned:
+        reviewed = review.get_games_for_delete(users_db, [g["name"] for g in owned])
+        deletable = [g for g in owned if g["name"] not in reviewed]
+    return render_template("mygames.html", games=deletable)
+
+@app.route("/deletegame/<int:game_id>", methods=["GET","POST"])
+def deletegame(game_id):
+    require_login()
+    result = db.query("games.db", "SELECT name, owner FROM games WHERE id = ?", [game_id])
+    if not result or result[0]["owner"] != session["username"]:
+        flash("Virhe: et voi poistaa tätä peliä.")
+        return redirect(url_for("mygames"))
+    reviews = review.get_game_for_delete(users_db, [result[0]["name"]])
+    if reviews:
+        flash("Virhe: peliä ei voi poistaa, koska sillä on arvioita.")
+        return redirect(url_for("mygames"))
+
+    games.delete_game(games_db, [game_id])
+    flash("Peli poistettu.")
+    return redirect(url_for("mygames"))
+
 def get_page():
     try:
         return max(int(request.args.get("page", "1")), 1)
     except ValueError:
         return 1
 
-def reguire_login():
+def require_login():
     if not session.get("username"):
         abort(403)

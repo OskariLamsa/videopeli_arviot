@@ -6,6 +6,10 @@
     <meta http-equiv="refresh" content="{{ seconds|default(3) }}; url={{ redirect_url|default(url_for('index')) }}">
 </head>
 <body>
+    <link rel="stylesheet" href="/static/main.css">
+    <div class="header">
+        <h1><a href="{{ url_for('index') }}">Minicritic: Pelien arviointisivusto</a></h1>
+    </div>
     <h1>{{ title }}</h1>
     <p>{{ message }}</p>
     <p><a href="{{ redirect_url|default(url_for('index')) }}">Siirry nyt</a></p>

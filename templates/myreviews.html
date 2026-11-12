@@ -1,8 +1,9 @@
 
 {% block content %}
-  <h1>
-  <a href="/">Minicritic: Pelien arviointisivusto</a>
-  </h1>
+<link rel="stylesheet" href="/static/main.css">
+  <div class="header">
+  <h1><a href="{{ url_for('index') }}">Minicritic: Pelien arviointisivusto</a></h1>
+  </div>
   <h2>{{ username }} - omat arviot: {{ total }} kappaletta</h2>
   {% if error %}
     <p>{{ error }}</p>
@@ -11,8 +12,10 @@
     <p>Et ole vielä kirjoittanut yhtään arviota.</p>
   {% else %}
     <h3>Arvioiden keskiarvo: {{ average }}</h3>
+    <div class="content">
     <ul>
       {% for review in reviews %}
+      <div class="thread">
         <li>
           <strong>{{ review.game_name }}</strong> - {{ review.score }}/10
           <p>{{ review.review }}</p>
@@ -25,8 +28,10 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           </form>
         </li>
+      </div>
       {% endfor %}
     </ul>
+    </div>
   {% if total_pages > 1 %}
   <nav>
     {% if page > 1 %}

@@ -1,20 +1,24 @@
 
 {% block content %}
-  <h1>
-  <a href="/">Minicritic: Pelien arviointisivusto</a>
-  </h1>
-  <h2>Käyttäjän {{ username[0] }} - arviot: {{ total }} kappaletta</h2>
+<link rel="stylesheet" href="/static/main.css">
+  <div class="header">
+  <h1><a href="{{ url_for('index') }}">Minicritic: Pelien arviointisivusto</a></h1>
+  </div>
 
   {% if reviews|length == 0 %}
     <p>Tämä käyttäjä ei ole vielä kirjoittanut arvioita.</p>
   {% else %}
+  <h2>Käyttäjän {{ username }} arviot - {{ total }} kappaletta.</h2>
     <ul>
         <h3>Arvioiden keskiarvo: {{ average }}</h3>
+      <div class="content">
       {% for review in reviews %}
+      <div class="thread">
         <li>
           <strong>{{ review.game_name }}</strong> - {{ review.score }}/10
           <p>{{ review.review }}</p>
         </li>
+        </div>
       {% endfor %}
     </ul>
     <nav>
@@ -28,5 +32,6 @@
       <a href="{{ url_for('user', username=username, page=page + 1) }}">Seuraava &raquo;</a>
     {% endif %}
   </nav>
+  </div>
   {% endif %}
 {% endblock %}

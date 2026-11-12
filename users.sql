@@ -9,7 +9,8 @@ CREATE TABLE reviews (
     username TEXT,
     game_name TEXT,
     score INT,
-    review TEXT
+    review TEXT,
+    UNIQUE (username, game_name)
 );
 
 CREATE TABLE thumbs (

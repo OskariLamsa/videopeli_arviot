@@ -1,0 +1,38 @@
+{% block content %}
+<link rel="stylesheet" href="/static/main.css">
+  <div class="header">
+  <h1><a href="{{ url_for('index') }}">Minicritic: Pelien arviointisivusto</a></h1>
+  </div>
+  <h1>Omat pelit</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div role="alert">
+        {% for category, message in messages %}
+          <p class="alert alert-{{ category }}"><strong>Huomio: </strong> {{ message }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+  <div class="content">
+  {% if games %}
+    <p>Voit poistaa pelejä, jotka olet lisännyt ja joilla ei ole vielä arvioita.</p>
+    <ul>
+      {% for game in games %}
+      <div class="thread">
+        <li>
+          {{ game.name }} ({{ game.console }})
+          <form action="{{ url_for('deletegame', game_id=game.id) }}" method="post"
+                style="display:inline" onsubmit="return confirm('Poistetaanko peli?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <button type="submit">Poista peli</button>
+          </form>
+        </li>
+        </div>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Voit poistaa pelin, jonka olet lisännyt, ja jolla ei ole vielä arvioita.</p>
+    <p>Et voi poistaa tällä hetkellä pelejä.</p>
+  {% endif %}
+  </div>
+{% endblock %}

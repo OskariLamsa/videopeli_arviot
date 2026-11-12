@@ -11,9 +11,9 @@ def updatereview(db_name, params):
 
 def newreview(db_name, params):
     sql = """
-                INSERT INTO reviews (username, game_name, score, review, thumbs_up, thumbs_down)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """
+    INSERT INTO reviews (username, game_name, score, review)
+    VALUES (?, ?, ?, ?)
+    """
     db.execute(db_name, sql, params)
 
 def new_thumb(db_name, params):
@@ -101,3 +101,35 @@ def get_review_count_by_game(db_name, param):
     WHERE game_name = ?
     """
     return db.query(db_name, sql, param)
+
+def get_thumb(db_name, params):
+    sql = """
+    SELECT positive
+    FROM thumbs
+    WHERE review_id = ? AND username = ?
+    """
+    return db.query(db_name, sql, params)
+
+def get_games_for_delete(db_name, names):
+    if not names:
+        return set()
+
+    placeholders = ",".join("?" * len(names))
+    sql = f"SELECT DISTINCT game_name FROM reviews WHERE game_name IN ({placeholders})"
+    rows = db.query(db_name, sql, names)
+    return {row["game_name"] for row in rows}
+
+def get_game_for_delete(db_name, param):
+    sql = """
+    SELECT 1
+    FROM reviews
+    WHERE game_name = ?
+    LIMIT 1
+    """
+    return db.query(db_name, sql, param)
+def remove_thumb(db_name, params):
+    sql = """
+    DELETE FROM thumbs
+    WHERE review_id = ? AND username = ?
+    """
+    db.execute(db_name, sql, params)

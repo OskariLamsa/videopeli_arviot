@@ -3,13 +3,16 @@
     <head>
         <title>Kirjautuminen</title>
     </head>
+    
     <body>
-        <h1>
-            <a href="/">Minicritic: Pelien arviointisivusto</a>
-        </h1>
+    <link rel="stylesheet" href="/static/main.css">
+        <div class="header">
+            <h1><a href="{{ url_for('index') }}">Minicritic: Pelien arviointisivusto</a></h1>
+        </div>
         {% if error %}
         <p b>{{ error }}</p b>
         {% endif %}
+        <div class="content">
         {% if session.username %}
         <p>
             Olet kirjautunut nimellä {{ session.username }}
@@ -31,5 +34,6 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         </form>
         {% endif %}
+        </div>
     </body>
 </html>

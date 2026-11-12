@@ -1,64 +1,116 @@
 {% block content %}
-  <h1>
-  <a href="/">Minicritic: Pelien arviointisivusto</a>
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, message in messages %}
-      <div class="alert alert-{{ category }}">{{ message }}</div>
-    {% endfor %}
-  {% endwith %}
-  </h1>
-        {% if not session.get("username") %}
-            <a href="/loginpage">Kirjaudu</a>
-            <a href="/register">Rekisteroidy</a>
-        {% else %}
-            Tervetuloa, {{ session.get("username") }}
-            <form action="{{ url_for('logout') }}" method="post" style="display:inline">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <button type="submit">Kirjaudu ulos</button>
-            </form>
-            <a href="/writereview">Kirjoita arvio</a>
-            <a href="myreviews">Omat arviosi</a>
-            <a href="writegame">Lisää peli</a>
-        {% endif %}
-  <form action="{{ url_for('index') }}" method="get">
-    <input type="text" name="q" value="{{ query }}" placeholder="Hae pelin nimellä" maxlength="100">
-
-    <select name="console" onchange="this.form.submit()">
-      <option value="">Kaikki alustat</option>
-      {% for p in consoles %}
-        <option value="{{ p.console }}" {% if p.console == console %}selected{% endif %}>
-          {{ p.console }}
-        </option>
-      {% endfor %}
-    </select>
-
-    <button type="submit">Hae</button>
-    {% if query or platform %}
-      <a href="{{ url_for('index') }}">Tyhjennä haku</a>
-    {% endif %}
+<link rel="stylesheet" href="/static/main.css">
+<header>
+  <div class="header">
+  <h1><a href="{{ url_for('index') }}">Minicritic: Pelien arviointisivusto</a></h1>
+  </div>
+<div class="nav">
+<nav aria-label="Päävalikko">
+    {% if not session.get("username") %}
+<ul>
+  <li>
+    <form action="{{ url_for('loginpage') }}" method="get">
+      <button type="submit">Kirjaudu</button>
+    </form>
+  </li>
+  <li>
+    <form action="{{ url_for('register') }}" method="get">
+      <button type="submit">Rekisteröidy</button>
+    </form>
+  </li>
+</ul>
+    {% else %}
+<p>Tervetuloa, {{ session.get("username") }}</p>
+<ul>
+  <li>
+    <form action="{{ url_for('writereview') }}" method="get">
+      <button type="submit">Kirjoita arvio</button>
+    </form>
+  </li>
+  <li>
+  <form action="{{ url_for('myreviews') }}" method="get">
+    <button type="submit">Omat arviosi</button>
   </form>
+  </li>
+  <li>
+    <form action="{{ url_for('writegame') }}" method="get">
+      <button type="submit">Lisää peli</button>
+    </form>
+  </li>
+  <li>
+    <form action="{{ url_for('logout') }}" method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit">Kirjaudu ulos</button>
+    </form>
+  </li>
+</ul>
+    {% endif %}
+</nav>
+</div>
 
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div role="alert">
+        {% for category, message in messages %}
+          <p class="alert alert-{{ category }}"><strong>[{{ category }}]</strong> {{ message }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+</header>
+
+<main id="main">
+  <h2>Hae pelejä</h2>
+  <form action="{{ url_for('index') }}" method="get" role="search">
+    <p>
+      <label for="q">Pelin nimi:</label>
+      <input type="text" id="q" name="q" value="{{ query }}" maxlength="100">
+    </p>
+    <p>
+      <label for="console">Alusta:</label>
+      <select id="console" name="console">
+        <option value="">Kaikki alustat</option>
+        {% for p in consoles %}
+          <option value="{{ p.console }}" {% if p.console == console %}selected{% endif %}>{{ p.console }}</option>
+        {% endfor %}
+      </select>
+    </p>
+    <p>
+      <label for="v">Vuosi:</label>
+      <input type="text" id="v" name="v" value="{{ year }}" maxlength="100">
+    </p>
+    <p>
+      <button type="submit">Hae</button>
+      {% if query or console %}
+        <a href="{{ url_for('index') }}">Tyhjennä haku</a>
+      {% endif %}
+    </p>
+  </form>
+  <div class="content">
+  <h2>Pelit</h2>
   {% if count == 0 %}
     <p>Haulla ei löytynyt pelejä.</p>
   {% else %}
+    <p>Löytyi {{ count }} peliä.</p>
     <ul>
-        <p>Löytyi ({{ count }}) peliä.</p>
       {% for game in games %}
-        <li><a href="{{ url_for('game', game_name=game.name) }}">{{ game.name }}</a> ({{ game.console }})</li>
+        <li><a href="{{ url_for('game', game_name=game.name) }}">{{ game.name }}</a> ({{ game.console }}) - {{ game.year }}</li>
       {% endfor %}
     </ul>
   {% endif %}
+  </div>
   {% if total_pages > 1 %}
-  <nav>
-    {% if page > 1 %}
-      <a href="{{ url_for('index', q=query or None, platform=platform or None, page=page - 1) }}">&laquo; Edellinen</a>
-    {% endif %}
-
-    Sivu {{ page }} / {{ total_pages }}
-
-    {% if page < total_pages %}
-      <a href="{{ url_for('index', q=query or None, platform=platform or None, page=page + 1) }}">Seuraava &raquo;</a>
-    {% endif %}
-  </nav>
-{% endif %}
+    <nav aria-label="Sivutus">
+      <p>
+        {% if page > 1 %}
+          <a rel="prev" href="{{ url_for('index', q=query or None, console=console or None, page=page - 1) }}">&laquo; Edellinen</a> |
+        {% endif %}
+        Sivu {{ page }} / {{ total_pages }}
+        {% if page < total_pages %}
+          | <a rel="next" href="{{ url_for('index', q=query or None, console=console or None, page=page + 1) }}">Seuraava &raquo;</a>
+        {% endif %}
+      </p>
+    </nav>
+  {% endif %}
+</main>
 {% endblock %}

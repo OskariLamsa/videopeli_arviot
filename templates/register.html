@@ -1,9 +1,9 @@
 
 {% block content %}
-  <h1>
-  <a href="/">Minicritic: Pelien arviointisivusto</a>
-  </h1>
-  <h2>Luo tunnus</h2>
+  <link rel="stylesheet" href="/static/main.css">
+      <div class="header">
+          <h1><a href="{{ url_for('index') }}">Minicritic: Pelien arviointisivusto</a></h1>
+      </div>
 
   {% if error %}
     <ul class="errors">
@@ -17,13 +17,15 @@
     </ul>
   {% endif %}
 
+  <h2>Luo Tunnus</h2>
+  <div class="content">
   <form action="{{ url_for('create') }}" method="post">
     <p>
-        Tunnus: <br />
+        Tunnus: 1-20 merkkiä. <br />
         <input type="text" name="username" maxlength="20" value="{{ username|default('') }}">    
     </p>
     <p>
-        Salasana: <br />
+        Salasana: Vähintään 8 merkkiä, vähintään yksi kirjain ja numero<br />
         <input type="password" name="password1" value="{{ password1 if password1 else '' }}">    
     </p>
     <p>
@@ -33,4 +35,5 @@
     <button type="submit">Luo tunnus</button>
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
   </form>
+  </div>
 {% endblock %}
