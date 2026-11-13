@@ -108,11 +108,11 @@
     <nav aria-label="Sivutus">
       <p>
         {% if page > 1 %}
-          <a rel="prev" href="{{ url_for('index', q=query or None, console=console or None, page=page - 1) }}">&laquo; Edellinen</a> |
+          <a rel="prev" href="{{ url_for('index', q=query or None, console=console or None, page=page - 1, v=year or None) }}">&laquo; Edellinen</a> |
         {% endif %}
         Sivu {{ page }} / {{ total_pages }}
         {% if page < total_pages %}
-          | <a rel="next" href="{{ url_for('index', q=query or None, console=console or None, page=page + 1) }}">Seuraava &raquo;</a>
+          | <a rel="next" href="{{ url_for('index', q=query or None, console=console or None, page=page + 1, v=year or None) }}">Seuraava &raquo;</a>
         {% endif %}
       </p>
     </nav>

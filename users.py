@@ -1,5 +1,6 @@
 import db
 
+
 def new_user(db_name, params):
     sql = """
     INSERT INTO users (username, password_hash)

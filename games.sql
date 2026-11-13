@@ -3,5 +3,6 @@ CREATE TABLE games (
     name TEXT,
     console TEXT,
     year INT,
-    owner TEXT
+    owner TEXT,
+    UNIQUE (name)
 );

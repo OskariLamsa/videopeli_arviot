@@ -86,6 +86,7 @@ def check_if_game_in_reviews(db_name, param):
     AND game_name = ?
     """
     return db.query(db_name, sql, param)
+
 def delete_review(db_name, param):
     sql = """
     DELETE
@@ -127,6 +128,7 @@ def get_game_for_delete(db_name, param):
     LIMIT 1
     """
     return db.query(db_name, sql, param)
+
 def remove_thumb(db_name, params):
     sql = """
     DELETE FROM thumbs

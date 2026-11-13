@@ -1,5 +1,6 @@
 import db
 
+
 def get_games(db_name):
     sql = """
     SELECT DISTINCT name
@@ -36,7 +37,6 @@ def get_games_with_conditions(db_name, conditions, limit_flag, params):
 
     return db.query(db_name, sql, params)
 
-
 def get_id_by_name(db_name, param):
     sql = """
     SELECT id
@@ -62,16 +62,22 @@ def get_games_by_user(db_name, param):
     """
     return db.query(db_name, sql, param)
 
+def get_game_owner_by_id(db_name, param):
+    sql = """
+    SELECT name, owner
+    FROM games
+    WHERE id = ?
+    """
+    return db.query(db_name, sql, param)
+
 def check_if_game_exists(db_name, param):
     sql = """
     SELECT id
     FROM games
     WHERE name = ?
     """
-    result = db.query(db_name, sql, param) 
-    if result:
-        return True
-    return False
+    result = db.query(db_name, sql, param)
+    return result
 
 def new_game(db_name, params):
     sql = """

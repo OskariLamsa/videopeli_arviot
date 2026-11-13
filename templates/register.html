@@ -26,11 +26,11 @@
     </p>
     <p>
         Salasana: Vähintään 8 merkkiä, vähintään yksi kirjain ja numero<br />
-        <input type="password" name="password1" value="{{ password1 if password1 else '' }}">    
+        <input type="password" name="password1">    
     </p>
     <p>
         Salasana uudelleen: <br />
-        <input type="password" name="password2" value="{{ password2 if password2 else '' }}">
+        <input type="password" name="password2">
     </p>
     <button type="submit">Luo tunnus</button>
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">

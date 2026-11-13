@@ -2,6 +2,8 @@ secret_key = "rvf38gkf45u87sug5984sob84qyipaip9ng4p9"
 
 users_db = "users.db"
 games_db = "games.db"
+GAMES_PER_PAGE = 20
+REVIEWS_PER_PAGE = 10
 
 CONSOLES = [
     "Nintendo NES",
@@ -27,5 +29,5 @@ CONSOLES = [
     "Xbox",
     "Xbox 360",
     "Xbox One",
-    "Xbox Series S/X"
+    "Xbox Series S/X",
 ]
